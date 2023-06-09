@@ -54,6 +54,7 @@ def patient_info(name):
 
 @app.route('/add_medicine', methods=['GET', 'POST'])
 def db():
+    patients = patients_data.keys()
     if request.method == 'POST':
         FDA_instruction = get_dose_NL(request.form['drug_name'])
         prompt = generate_prompt(request.form['drug_name'], FDA_instruction)
@@ -61,13 +62,15 @@ def db():
                                 phase='show_prompt', 
                                 drug_name=request.form['drug_name'],
                                 FDA_instruction=FDA_instruction,
-                                prompt=prompt)
+                                prompt=prompt,
+                                patients=patients)
     else: # Fetch drug name
         return render_template('db.html', 
                                phase='fetch_drug_name', 
                                drug_name="",
                                FDA_instruction="",
-                               prompt="")
+                               prompt="",
+                               patients=patients)
 
 if __name__ == "__main__":
     global DDC
