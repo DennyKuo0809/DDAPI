@@ -1,0 +1,99 @@
+{
+    "王大明": {
+        "age": "62",
+        "gender": "male",
+        "renal_impairment": "ESRD",
+        "hepatic_impairment": "none",
+        "special_disease": [],
+        "weight": "73kg"
+    },
+    "林小華": {
+        "age": "40",
+        "gender": "female",
+        "renal_impairment": "none",
+        "hepatic_impairment": "severe",
+        "special_disease": [],
+        "weight": "102kg"
+    },
+    "病人1": {
+      "age": "27",
+      "gender": "female",
+      "renal_impairment": "none",
+      "hepatic_impairment": "moderate",
+      "special_disease": ["MDD", "debilitated"],
+      "weight": "68kg"
+    },
+    "病人2": {
+      "age": "61",
+      "gender": "male",
+      "renal_impairment": "ESRD",
+      "hepatic_impairment": "none",
+      "special_disease": [],
+      "weight": "89kg"
+    },
+    "病人3": {
+      "age": "33",
+      "gender": "female",
+      "renal_impairment": "none",
+      "hepatic_impairment": "mild",
+      "special_disease": ["PTSD"],
+      "weight": "51kg"
+    },
+    "病人4": {
+      "age": "49",
+      "gender": "male",
+      "renal_impairment": "moderate",
+      "hepatic_impairment": "moderate",
+      "special_disease": ["PD"],
+      "weight": "75kg"
+    },
+    "病人5": {
+      "age": "6",
+      "gender": "female",
+      "renal_impairment": "mild",
+      "hepatic_impairment": "none",
+      "special_disease": [],
+      "weight": "30kg"
+    },
+    "病人6": {
+      "age": "56",
+      "gender": "male",
+      "renal_impairment": "servere",
+      "hepatic_impairment": "moderate",
+      "special_disease": [],
+      "weight": "82kg"
+    },
+    "病人7": {
+      "age": "33",
+      "gender": "female",
+      "renal_impairment": "moderate",
+      "hepatic_impairment": "none",
+      "special_disease": ["PTSD"],
+      "weight": "57kg"
+    },
+    "病人8": {
+      "age": "72",
+      "gender": "male",
+      "renal_impairment": "none",
+      "hepatic_impairment": "mild",
+      "special_disease": [],
+      "weight": "70kg"
+    },
+    "病人9": {
+      "age": "44",
+      "gender": "female",
+      "renal_impairment": "mild",
+      "hepatic_impairment": "none",
+      "special_disease": ["PD", "debilitated"],
+      "weight": "73kg"
+    },
+    "病人10": {
+      "age": "9",
+      "gender": "male",
+      "renal_impairment": "none",
+      "hepatic_impairment": "none",
+      "special_disease": ["ADHD"],
+      "weight": "30kg"
+    }
+}   
+  

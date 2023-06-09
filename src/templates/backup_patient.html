@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+
+    <title>Patient information and Dosage</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style type="text/css">
+        body {
+            background: #eee;
+        }
+
+        .ibox-content {
+            /* background-color: #FFFFFF; */
+            color: inherit;
+            padding: 15px 20px 20px 20px;
+            border-color: #E7EAEC;
+            border-image: none;
+            border-style: solid solid none;
+            border-width: 1px 0px;
+        }
+
+        .search-form {
+            margin-top: 10px;
+        }
+
+        .search-result h3 {
+            margin-bottom: 0;
+            color: #1E0FBE;
+        }
+
+        .search-result .search-link {
+            color: #006621;
+        }
+
+        .search-result p {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .hr-line-dashed {
+            border-top: 1px dashed #E7EAEC;
+            color: #ffffff;
+            background-color: #ffffff;
+            height: 1px;
+            margin: 20px 0;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 100;
+        }
+    </style>
+</head>
+<body style="background-color: rgba(196, 237, 255, 0.048); margin: 0px;">
+    <nav class="navbar navbar-light" style="background-color: #607df1; padding-left: 20px;">
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#leftSideBar" aria-controls="leftSideBar" style="border: 0px;">
+            <span class="navbar-brand" href="" style="font-weight: 500; color: #fff; border: 0px; border-color: #fff;">Dosage</span>
+        </button>
+    </nav>
+    
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="leftSideBar" aria-labelledby="leftSideBarLabel">
+        <div class="offcanvas-header" style="background-color: #607df1;">
+          <h5 class="offcanvas-title" id="leftSideBarLabel" style="color: #fff;">Dosage</h5>
+          <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <div>
+            <li class="has-submenu" style="list-style-type: none;">
+                <p><a class="btn" href="../">Main page</a></p>
+                <p><a class="btn" data-bs-toggle="collapse" data-bs-target="#patients">Patients &raquo;</a></p>
+                <ul class="collapse submenu" id="patients" style="list-style-type: none;">
+                    {% for name in patients %}
+                        <li style="list-style-type: none;"><a href="{{name}}">{{name}}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+          </div>
+        </div>
+    </div>
+
+
+    <div class="row" style="margin-top: 50px;">
+        <div class="col-lg-6 col-md-6 col-sm-6" style="padding-left: 20px; background-color: #fff; padding-top: 10px;">
+                <h3 class="text-center">{{info['name']}}</h3>
+                <div class="table-responsive"> 
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th scope="col"></th>
+                            <th scope="col"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for k, v in info.items() %}
+                                {% if k != 'name' %}
+                                    <tr>
+                                        <th scope="row">{{k[0].upper() + k[1:].replace('_', ' ')}}</th>
+                                        <td>{{v}}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            <!-- <p><em><strong>Age</strong></em>: {{info['age']}}</p>
+            <p><em><strong>Gender</strong></em>: {{info['gender']}}</p>
+            <p><em><strong>Renal Impairment</strong></em>: {{info['renal_impairment']}}</p>
+            <p><em><strong>Hepatic Impairment</strong></em>: {{info['hepatic_impairment']}}</p>
+            <p><em><strong>Special Disease</strong></em>: {{info['special_disease']}}</p>
+            <p><em><strong>Weight</strong></em>: {{info['weight']}}</p> -->
+        </div>
+        
+        <div class="col-lg-6 col-md-6 col-sm-6" style="margin-top: 20px;">
+            <div>
+                <form method="post" style="margin-left: 20px;" autocomplete="off">
+                    <div class="row">
+                        <div class="col-7">
+                            <input type="input" id="durg_name_input" name="drug_name"  class="form-control" placeholder="Drug Name" required>
+                        </div>
+                        <div class="col-2">
+                            <button type="submit" class="btn btn-primary form-control">Search</button>
+                        </div>
+                    </div>
+                    <input type="text" style="visibility: hidden;" name="form_name" value="{{phase}}">
+                </form>
+                <div style="margin-left: 30px;">
+                {% if phase == "show_dosage" %}
+                    <h3 style="color: blue;"><strong>{{drug_name}}</strong></h3>
+                    {% for d in dosage %}
+                        <div class="card border-primary" style="width: 36rem;">
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong style="color: grey;">tags:</strong> 
+                                    {% for cond in d['condition'].split(',') %}
+                                        <span class="badge bg-secondary">{{cond}}</span>
+                                    {% endfor %}
+                                </p>
+                                <!-- <p class="card-text"><strong>Dosage</strong>: <em>{{d['dosage']}}</em></p>
+                                <p class="card-text"><strong>Max Dose</strong>: <em>{{d['max_dose']}}</em></p>
+                                <p class="card-text"><strong>Recommend</strong>: <em>{{d['recommend']}}</em></p> -->
+
+                                <div class="table-responsive"> 
+                                    <table class="table">
+                                        <thead>
+                                        <!-- <tr>
+                                            <th scope="col"></th>
+                                            <th scope="col"></th>
+                                        </tr> -->
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row" style="color: #607df1;">Dosage</th>
+                                                <td><em>{{d['dosage']}}</em></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row" style="color: #607df1;">Maximum Dose</th>
+                                                <td><em>{{d['max_dose']}}</em></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row" style="color: #607df1;">Recommend</th>
+                                                <td><em>{{d['recommend']}}</em></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                        <br>
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<style>
+/* .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='red' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+} */
+</style>
+</html>
