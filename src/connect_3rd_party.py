@@ -35,6 +35,9 @@ def generate_prompt(drug_name: str, dosage_info: str) -> str:
     prompt_content = f"""Between >>> and <<< is a drug dosage information of {drug_name} for different situations. I need you to extract the column info for different situtation.
     Use array of json object to answer my question. The columns and their definitions are as follow:
     | drug | age | gender | renal_impairment | hepatic_impairment | special_disease | weight | dosage | max_dose | recommend |
+    - drug:
+        - type: TEXT
+        - content: drug name
     - age:
         - type: TEXT
         - content:

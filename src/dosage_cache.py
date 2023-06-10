@@ -5,7 +5,14 @@ class DD_cache:
     def __init__(self, ):
         self.drug_name = ""
         self.structure = []
-        self.interested_keys = []
+        self.interested_keys = [
+            'age', 
+            'gender', 
+            'renal_impairment', 
+            'hepatic_impairment',
+            'special_disease',
+            'weight'
+        ]
         self.matching_funcs = {
             'age': case_matching.match_age,
             'gender': case_matching.match_gender,
@@ -20,7 +27,6 @@ class DD_cache:
         ### TODO: connect DB and get data
         data_ = connect_db.dosage_search(drug_name)
         self.structure = data_['structure']
-        self.interested_keys = data_['interested_keys']
 
     def clear(self, ):
         self.drug_name = ""
@@ -40,14 +46,14 @@ class DD_cache:
             options[k.replace("_", " ")] = list(self.structure[0][k].keys())
         return options
     
-    def return_all_case(self) -> dict:
+    def overview(self) -> dict:
         instruction = []
-        at_least_one = False
         for case in self.structure:
             match_ = True
             condition_str = ""
             for k in self.interested_keys:
-                match_, match_str = self.matching_funcs[k]("", case[k], all_case=True)
+                case_parameter = case[k] if k != 'weight' else case['weight']+case['weight_unit']
+                match_, match_str = self.matching_funcs[k]("", case_parameter, overview=True)
                 if match_ != case_matching.condition.IGNORE:
                     if condition_str == "":
                         condition_str += match_str
@@ -61,7 +67,7 @@ class DD_cache:
                     'recommend': case['recommend']
                 }
             )
-            
+          
         return instruction
     
     def match_case(self, p_info: dict) -> dict:
@@ -71,7 +77,8 @@ class DD_cache:
             match_ = True
             condition_str = ""
             for k in self.interested_keys:
-                match_, match_str = self.matching_funcs[k](p_info[k], case[k])
+                case_parameter = case[k] if k != 'weight' else case['weight']+case['weight_unit']
+                match_, match_str = self.matching_funcs[k](p_info[k], case_parameter)
                 if match_ == case_matching.condition.DOSE_NOT_MATCH:
                     break
                 if match_ == case_matching.condition.MATCH:

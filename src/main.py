@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from dosage_cache import *
 from connect_3rd_party import *
+from connect_db import *
 import json
 
 app = Flask(__name__)
@@ -12,7 +13,7 @@ def index():
     patients = patients_data.keys()
     if request.method == 'POST':
         DDC.set_name(request.form['drug_name'])
-        instruction = DDC.return_all_case()
+        instruction = DDC.overview()
         return render_template('index.html', 
                                 phase='show_dosage', 
                                 drug_name=request.form['drug_name'],
@@ -56,14 +57,26 @@ def patient_info(name):
 def db():
     patients = patients_data.keys()
     if request.method == 'POST':
-        FDA_instruction = get_dose_NL(request.form['drug_name'])
-        prompt = generate_prompt(request.form['drug_name'], FDA_instruction)
-        return render_template('db.html', 
-                                phase='show_prompt', 
-                                drug_name=request.form['drug_name'],
-                                FDA_instruction=FDA_instruction,
-                                prompt=prompt,
-                                patients=patients)
+        form_name = request.form['form_name']
+
+        if form_name == 'generate-prompt':
+            FDA_instruction = get_dose_NL(request.form['drug_name'])
+            prompt = generate_prompt(request.form['drug_name'], FDA_instruction)
+            return render_template('db.html', 
+                                    phase='show_prompt', 
+                                    drug_name=request.form['drug_name'],
+                                    FDA_instruction=FDA_instruction,
+                                    prompt=prompt,
+                                    patients=patients)
+        elif form_name == 'save-to-db':
+            print(request.form.keys())
+            save_to_db(request.form['drug_name'], request.form['gpt-4-result'])
+            return render_template('db.html', 
+                               phase='fetch_drug_name', 
+                               drug_name="",
+                               FDA_instruction="",
+                               prompt="",
+                               patients=patients)
     else: # Fetch drug name
         return render_template('db.html', 
                                phase='fetch_drug_name', 

@@ -1,4 +1,5 @@
 from enum import IntEnum
+import re
 
 class condition(IntEnum):
     DOSE_NOT_MATCH = 0
@@ -6,134 +7,173 @@ class condition(IntEnum):
     IGNORE = 2
     TAGS = 3
 
-def match_age(p_age: str, case: dict, all_case=False):
-    p_age_ = int(p_age) if p_age != "" else -1
-    min_age = int(case["min"])
-    max_age = int(case["max"])
-
+def match_age(p_age: str, case: str, overview=False):
     # Ignore
-    if min_age == 0 and \
-        max_age == 0 and \
-        not case["pediatric"] and \
-        not case["adult"] and \
-        not case["elderly"]:
+    if case == "any":
         return condition.IGNORE, ""
     
-    if all_case:
-        if min_age != 0 or max_age != 0:
-            return condition.TAGS, f"{min_age}-{max_age}"
-        else:
-            tag_list = ""
-            for key in ['pediatric', 'adult', 'elderly']:
-                if case[key]:
-                    tag_list += key + ", "
-            return condition.TAGS, tag_list[:-2]
-    
+    # Dosage overview
+    if overview:
+        return condition.TAGS, case
+
+    # Convert Age of patient to number
+    patient_age = int(re.findall(r"[-+]?(?:\d*\.*\d+)", p_age)[0])
+    if 'month' in p_age:
+        patient_age *= 0.01
+
+    # Preprocessing
+    case_ = case
+    if '>' in case:
+        case_ = case.split('<')[1] + '~'
+    elif '<' in case:
+        case_ = case.replace('>', '~')
+
     # Precise Age
-    if min_age != 0 or max_age != 0:
-        if min_age <= p_age_ and max_age >= p_age_:
-            return condition.MATCH, f"{min_age}-{max_age}"
-        return condition.DOSE_NOT_MATCH, ""
-    # Group
-    if p_age_ < 18 and case["pediatric"]:
-        return condition.MATCH, "pediatric"
-    if p_age_ >= 18 and case["adult"]:
-        return condition.MATCH, "adult"
-    if p_age_ >= 75 and case["elderly"]:
-        return condition.MATCH, "elderly"
+    if '~' in case_:
+        m_age, M_age = case_.split('~')
+        min_age, max_age = 0.0, 250.0
+
+        if 'month' in m_age:
+            min_age = int(re.findall(r"[-+]?(?:\d*\.*\d+)", m_age)[0]) * 0.01
+        elif m_age == '':
+            min_age = 0.0
+        else:
+            min_age = int(re.findall(r"[-+]?(?:\d*\.*\d+)", m_age)[0])
+
+        if 'month' in M_age:
+            max_age = int(re.findall(r"[-+]?(?:\d*\.*\d+)", M_age)[0]) * 0.01
+        elif M_age == '':
+            max_age = 250.0
+        else:
+            max_age = int(re.findall(r"[-+]?(?:\d*\.*\d+)", M_age)[0])
+
+        if patient_age <= max_age and patient_age >= min_age:
+            return condition.MATCH, case
     
+    else: # class
+        if (patient_age < 18 and case == 'pediatric') or \
+            (patient_age >= 18  and patient_age < 75 and case == 'adult') or \
+            (patient_age >= 75 and case == "elderly"):
+            return condition.MATCH, case
+
     return condition.DOSE_NOT_MATCH, ""
 
-def match_gender(p_gender: str, case: dict, all_case=False) -> int:
-    if all_case:
-        if not case['male'] and not case['female']:
-            return condition.IGNORE, ""
-        else:
-            tag_list = ""
-            for key in ['male', 'female']:
-                if case[key]:
-                    tag_list += key + ", "
-            return condition.TAGS, tag_list[:-2]
-        
-    if case[p_gender]:
+def match_gender(p_gender: str, case: str, overview=False) -> int:
+    # Ignore
+    if case == 'any':
+        return condition.IGNORE, ""
+    
+    # Dosage overview
+    if overview:
+        return condition.TAGS, case
+    
+    # Match
+    if case == p_gender:
         return condition.MATCH, p_gender
     return condition.DOSE_NOT_MATCH, ""
 
-def match_renal_impairment(p_r_i: str, case: dict, all_case=False) -> int:
-    if not case["mild"] and \
-        not case["moderate"] and \
-        not case["severe"] and \
-        not case["ESRD"]:
-         return condition.IGNORE, ""
+def match_renal_impairment(p_r_i: str, case: list[str], overview=False) -> int:
+    # Ignore
+    if len(case) == 0:
+        return condition.IGNORE, ""
     
-    if all_case:
-        tag_list = ""
-        for key in ['mild', 'moderate', 'severe', 'ESRD']:
-            if case[key]:
-                tag_list += key + " renal impairment, "
-        return condition.TAGS, tag_list[:-2]
-    
-    if case[p_r_i]:
-        if p_r_i == "ESRD":
-            return condition.MATCH, f"ESRD"
-        return condition.MATCH, f"{p_r_i} renal impairment"
-    
+    ret = case[0]+" renal impairment" if case[0] != 'ESRD' else 'ESRD'
+    for d in case[1:]:
+        ret += f", {d} renal impairment" if d != 'ESRD' else ', ESRD'
+
+    # Dosage overview
+    if overview:
+        return condition.TAGS, ret
+
+    # Match
+    if p_r_i in case:
+        return condition.MATCH, ret
     return condition.DOSE_NOT_MATCH, ""
 
-def match_hepatic_impairment(p_h_i: str, case: dict, all_case=False) -> int:
-    
-    if not case["mild"] and \
-        not case["moderate"] and \
-        not case["severe"]:
+def match_hepatic_impairment(p_h_i: str, case: list[str], overview=False) -> int:
+    # Ignore
+    if len(case) == 0:
         return condition.IGNORE, ""
     
-    if all_case:
-        tag_list = ""
-        for key in ['mild', 'moderate', 'severe']:
-            if case[key]:
-                tag_list += key + " hepatic impairment, "
-        return condition.TAGS, tag_list[:-2]
+    ret = case[0]+" hepatic impairment"
+    for d in case[1:]:
+        ret += f", {d} hepatic impairment"
     
-    if case[p_h_i]:
-        return condition.MATCH, f"{p_h_i} hepatic impairment"
-    
+    # Dosage overview
+    if overview:
+        return condition.TAGS, ret
+
+    # Match
+    if p_h_i in case:
+        return condition.MATCH, ret
     return condition.DOSE_NOT_MATCH, ""
 
-def match_special_disease(p_sd: list[str], case: dict, all_case=False) -> int:
-    if all_case:
-        intereted_list = case.keys()
-    else:
-        intereted_list = p_sd
-
-    d_list = ""
-    for v in intereted_list:
-        if case[v]:
-            if d_list == "":
-                d_list += v
-            else:
-                d_list += f", {v}"
-    if d_list != "":
-        return condition.MATCH, d_list
-    else:
-        return condition.IGNORE, ""
-
-def match_weight(p_w: str, case: dict, all_case=False) -> int:
-    kg_to_lb = 2.2
-
-    min_weight = float(case["min"])
-    max_weight = float(case["max"])
-    p_w_ = float(p_w[:-2]) if p_w != "" else -1
-
-    if 'lb' in case['unit']:
-        p_w_ *= kg_to_lb
-
-    if min_weight == 0 and max_weight == 0:
+def match_special_disease(p_sd: list[str], case: list[str], overview=False) -> int:
+    # Ignore
+    if len(case) == 0:
         return condition.IGNORE, ""
     
-    if all_case:
-        return condition.TAGS, f"{min_weight}-{max_weight} {case['unit']}"
+    ret = case[0]
+    for d in case[1:]:
+        ret += f", {d}"
+
+    # Dosage overview
+    if overview:
+        return condition.TAGS, ret
     
-    if min_weight <= p_w_ and max_weight >= p_w_:
-        return condition.MATCH, f"{min_weight}-{max_weight} {case['unit']}"
+    # Match
+    p_list = p_sd.sort()
+    case_list = case.sort()
+    
+    if p_list == case_list:
+        return condition.MATCH, ret
+    return condition.DOSE_NOT_MATCH, ""
+
+def match_weight(p_w: str, case: str, overview=False) -> int:
+    # Ignore
+    if 'any' in case:
+        return condition.IGNORE, ''
+    
+    # Dosage overview
+    if overview:
+        return condition.TAGS, case
+
+    KG_2_LB = 2.2
+    KG_2_G = 1000.0
+
+    # Convert Age of patient to number
+    patient_weight = float(re.findall(r"[-+]?(?:\d*\.*\d+)", p_w)[0])
+    if 'lb' in case:
+        patient_age *= KG_2_LB
+    if 'g' in case and 'kg' not in case:
+        patient_weight *= KG_2_G
+
+    # Preprocessing
+    case_ = ''
+    for ch in case:
+        if not ch.isalpha():
+            case_ += ch
+    if '>' in case:
+        case_ = case_.split('>')[1] + '~'
+    elif '<' in case:
+        case_ = '~' + case_.split('<')[1]
+
+    # Precise Age
+    if '~' in case_:
+        m_w, M_w = case_.split('~')
+        min_w, max_w = 0.0, 250.0
+
+        if m_w == '':
+            min_w = 0.0
+        else:
+            min_w = float(re.findall(r"[-+]?(?:\d*\.*\d+)", m_w)[0])
+
+        if M_w == '':
+            max_w = 1000.0
+        else:
+            max_w = float(re.findall(r"[-+]?(?:\d*\.*\d+)", M_w)[0])
+
+        if patient_weight <= max_w and patient_weight >= min_w:
+            return condition.MATCH, f"{min_w}~{max_w}"
     
     return condition.DOSE_NOT_MATCH, ""
